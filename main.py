@@ -1,56 +1,8 @@
 import math
 import random
-
-class Planet:
-    def __init__(self, pos, r, v, m, color, name = "Planet"):
-        self.name = name
-        self.pos = pos
-        self.r = r
-        self.v = v
-        self.m = m
-        self.color = color
-
-    def update(self):
-        a = [0, 0]
-        for p in planets:
-            if p != self:
-                dx = (self.pos[0] - p.pos[0])*1000*1000
-                dy = (self.pos[1] - p.pos[1])*1000*1000
-
-                if dx != 0 or dy != 0:
-                    acc = G*p.m/(dx**2 + dy**2)
-                if dx != 0:
-                    alfa = math.atan(abs(dy/dx))
-                else:
-                    alfa = math.pi/2
-
-                if p.pos[0] > self.pos[0]:
-                    a[0] += acc*math.cos(alfa)
-                else:
-                    a[0] -= acc*math.cos(alfa)
-                if p.pos[1] > self.pos[1]:
-                    a[1] += acc*math.sin(alfa)
-                else:
-                    a[1] -= acc*math.sin(alfa)
-
-        self.v[0] += a[0]/1000/1000*10
-        self.v[1] += a[1]/1000/1000*10
-
-        self.pos[0] += self.v[0]/FPS
-        self.pos[1] += self.v[1]/FPS
-
-    def draw(self):
-        pygame.draw.circle(screen, self.color, self.pos, self.r)
-    
-    def write(self, i):
-        self.vel = (self.v[0]**2 + self.v[1]**2) ** (1/2)
-
-        text_render = font.render(f"{self.name} : {round(self.vel, 2)} km/s (x: {round(self.v[0], 2)}, y: {round(self.v[1], 2)})", True, self.color)
-        text_rect = text_render.get_rect(topleft = (WIDTH + 10, 10 + i*30))
-        screen.blit(text_render, text_rect)
-
 import pygame
 from PIL import Image
+from planet import Planet
 
 pygame.init()
 
@@ -61,13 +13,19 @@ HEIGHT = int(pygame.display.Info().current_h * 5/6)
 center_w = WIDTH/2
 center_h = HEIGHT/2
 
-planets = []
-sun = Planet([center_w, center_h], 700/2/10, [0, 0], 1.989*10**30, (255, 255, 0), "Sun")
-mercury = Planet([center_w - 69.8, center_h], 2.4/2, [0, 38.86], 3.301*10**23, (128, 128, 128), "Mercury")
-venus = Planet([center_w - 108, center_h], 6.6/2, [0, 35], 4.8675*10**24, (255, 128, 0), "Venus")
-earth = Planet([center_w - 152.1, center_h], 6.3/2, [0, 29.3], 5.972*10**24, (0, 0, 255), "Earth")
-mars = Planet([center_w - 228, center_h], 3.5/2, [0, 21.972], 6.4185*10**23, (255, 0, 0), "Mars")
-planets = [sun, mercury, venus, earth, mars]
+DARK_BLUE = (0, 0, 50)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+def solar_system():
+    sun = Planet([center_w, center_h], 700/2/10, [0, 0], 1.989*10**30, (255, 255, 0), "Sun")
+    mercury = Planet([center_w - 69.8, center_h], 2.4/2, [0, 38.86], 3.301*10**23, (128, 128, 128), "Mercury")
+    venus = Planet([center_w - 108, center_h], 6.6/2, [0, 35], 4.8675*10**24, (255, 128, 0), "Venus")
+    earth = Planet([center_w - 152.1, center_h], 6.3/2, [0, 29.3], 5.972*10**24, (0, 0, 255), "Earth")
+    mars = Planet([center_w - 228, center_h], 3.5/2, [0, 21.972], 6.4185*10**23, (255, 0, 0), "Mars")
+    return [sun, mercury, venus, earth, mars]
+
+planets = solar_system()
 
 screen = pygame.display.set_mode((WIDTH + width_data_rect, HEIGHT)) 
 pygame.display.set_caption("Gravity Engine")
@@ -76,17 +34,21 @@ FPS = 100
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 20)
 
-G = 6.67408*10**-11
-
 number_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
 
 color_hue = pygame.image.load("color_hue.png")
 color_hue_pixels = list(Image.open("color_hue.png").getdata())
 
+num_stars = 100
+stars = [(screen, tuple([random.randint(150, 250)]*3), (random.randint(0, WIDTH), random.randint(0, HEIGHT)), random.randint(1, 3)) for i in range(num_stars)]
+
 game = True
 
 while game:
-    screen.fill((0, 0, 100))
+    screen.fill(DARK_BLUE)
+
+    for star in stars:
+        pygame.draw.circle(*star)
 
     to_remove = []
     to_add = []
@@ -123,14 +85,14 @@ while game:
         break
 
     for i in range(len(planets)):
-        planets[i].update()
-        planets[i].draw()
+        planets[i].update(planets, FPS)
+        planets[i].draw(screen)
 
-    pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, width_data_rect, HEIGHT))
-    pygame.draw.line(screen, (255, 255, 255), (WIDTH, 0), (WIDTH, HEIGHT))
+    pygame.draw.rect(screen, BLACK, (WIDTH, 0, width_data_rect, HEIGHT))
+    pygame.draw.line(screen, WHITE, (WIDTH, 0), (WIDTH, HEIGHT))
 
     for i in range(len(planets)):
-        planets[i].write(i)
+        planets[i].write(i, screen, font, WIDTH)
 
     clock.tick(FPS)
     for event in pygame.event.get():
@@ -142,7 +104,7 @@ while game:
             rect_w, rect_h = 100, 20
 
             mass = "1*10**30"
-            color = (255, 255, 255)
+            color = WHITE
 
             done = False
             esc = False
@@ -152,13 +114,16 @@ while game:
                 mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
 
                 if not done:
-                    screen.fill((0,0,100))
+                    screen.fill(DARK_BLUE)
+
+                    for star in stars:
+                        pygame.draw.circle(*star)
 
                     for i in range(len(planets)):
-                        planets[i].draw()
+                        planets[i].draw(screen)
 
                     try:
-                        m = eval(mass) # instead of eval(), I could use the solve() function from my calculator app
+                        m = eval(mass) # instead of eval(), I could use the solve() function from my calculator
                     except:
                         pass
 
@@ -191,15 +156,15 @@ while game:
                         pygame.draw.polygon(screen, (255, 0, 0), [mouse, (x1, y1), (x2, y2)])
 
                     p = Planet([planet_w, planet_h], radius, vel, 10**30, color)
-                    p.draw()
+                    p.draw(screen)
 
                     pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, width_data_rect, HEIGHT))
                     pygame.draw.line(screen, (255, 255, 255), (WIDTH, 0), (WIDTH, HEIGHT))
 
                     for i in range(len(planets)):
-                        planets[i].write(i)
+                        planets[i].write(i, screen, font, WIDTH)
                     
-                    p.write(i+1)
+                    p.write(i+1, screen, font, WIDTH)
 
                     if (planet_w < WIDTH - 5 - rect_w + radius) and (planet_h > rect_h + 5 + radius):
                         rect = (planet_w - radius, planet_h - rect_h - radius - 5, rect_w, rect_h)
@@ -222,8 +187,10 @@ while game:
                 else:
                     point = (10, 10)
                     width = 10
+                    if planet_w < 300 and planet_h < 300:
+                        point = (10, HEIGHT - 10 - 2 * width - 255)
                     pygame.draw.rect(screen, (0, 0, 0), (*point, 255 + 2 * width, 255 + 2 * width), border_radius = 5)
-                    screen.blit(color_hue, (*(p + width for p in point), 255, 255)) # just a bit of fun with notation
+                    screen.blit(color_hue, (point[0] + width, point[1] + width, 255, 255))
 
                     if (point[0] + width < mouse_x < point[0] + width + 255) and (point[1] + width < mouse_y < point[1] + width + 255):
                         pixel_x = mouse_x - width - point[0]
@@ -233,7 +200,7 @@ while game:
                         pygame.draw.circle(screen, (0, 0, 0), mouse, 10, 1)
 
                         p = Planet([planet_w, planet_h], radius, vel, 10**30, color)
-                        p.draw()
+                        p.draw(screen)
 
                         pygame.draw.rect(screen, (255, 255, 255), rect, border_radius = 5)
                         screen.blit(mass_render, mass_rect)
@@ -270,12 +237,8 @@ while game:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                sun = Planet([center_w, center_h], 700/2/10, [0, 0], 1.989*10**30, (255, 255, 0), "Sun")
-                mercury = Planet([center_w - 69.8, center_h], 2.4/2, [0, 38.86], 3.301*10**23, (128, 128, 128), "Mercury")
-                venus = Planet([center_w - 108, center_h], 6.6/2, [0, 35], 4.8675*10**24, (255, 128, 0), "Venus")
-                earth = Planet([center_w - 152.1, center_h], 6.3/2, [0, 29.3], 5.972*10**24, (0, 0, 255), "Earth")
-                mars = Planet([center_w - 228, center_h], 3.5/2, [0, 21.972], 6.4185*10**23, (255, 0, 0), "Mars")
-                planets = [sun, mercury, venus, earth, mars]
+                
+                planets = solar_system()
 
     pygame.display.update()
 
