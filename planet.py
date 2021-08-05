@@ -1,8 +1,6 @@
 import math
 import pygame
 
-
-
 class Planet:
     def __init__(self, pos, r, v, m, color, name = "Planet"):
         self.name = name
@@ -13,6 +11,7 @@ class Planet:
         self.color = color
         self.future_pos = 0
         self.future_v = 0
+        self.points = {}
 
     def planet_acceleration(self, planets, time="present"):
         a = [0, 0]
@@ -46,15 +45,17 @@ class Planet:
                     a[1] -= acc*math.sin(alfa)
         return a
 
-    def update_velocity(self, planets, FPS):
+    def update_velocity(self, planets, FPS, v_simulation):
         a = self.planet_acceleration(planets)
 
-        self.v[0] += a[0]/1000/FPS*50
-        self.v[1] += a[1]/1000/FPS*50
+        self.v[0] += a[0]/1000/FPS*v_simulation
+        self.v[1] += a[1]/1000/FPS*v_simulation
 
-    def update_position(self, FPS):
-        self.pos[0] += self.v[0]/FPS*50
-        self.pos[1] += self.v[1]/FPS*50
+    def update_position(self, FPS, v_simulation):
+        self.pos[0] += self.v[0]/FPS*v_simulation
+        self.pos[1] += self.v[1]/FPS*v_simulation
+
+        self.points[self.pos[0]] = self.pos[1]
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.pos, self.r)
@@ -65,3 +66,7 @@ class Planet:
         text_render = font.render(f"{self.name} : {round(self.vel, 2)} km/s (x: {round(self.v[0], 2)}, y: {round(self.v[1], 2)})", True, self.color)
         text_rect = text_render.get_rect(topleft = (WIDTH + 10, 10 + i*30))
         screen.blit(text_render, text_rect)
+
+    def draw_way(self, screen):
+        for x in self.points:
+            pygame.draw.circle(screen, self.color, (x, self.points[x]), 1)

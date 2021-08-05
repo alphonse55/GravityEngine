@@ -33,6 +33,9 @@ color_hue_pixels = list(Image.open("color_hue.png").getdata())
 num_stars = 100
 stars = [(screen, tuple([random.randint(150, 250)]*3), (random.randint(0, WIDTH), random.randint(0, HEIGHT)), random.randint(1, 3)) for i in range(num_stars)]
 
+v_simulation = 1
+max_v_simulation = 20
+
 def solar_system():
     # distance : in millions of km
     # radius : in thousands of km, all get divided by 2 and the sun by 10 on top for size on screen, then divided by 1000 to make it fit
@@ -53,8 +56,8 @@ def solar_system():
     p2 = Planet([center_w - x, center_h - y], 10, [vx/2, -vy/2], m, (255, 0, 0)) # red
     p3 = Planet([center_w, center_h], 10, [-vx, vy], m, (255, 255, 255)) # white
 
-    planets = [p1, p2, p3] # 8 figure
-    # planets = [sun, mercury, venus, earth, mars] # solar system
+    # planets = [p1, p2, p3] # 8 figure
+    planets = [sun, mercury, venus, mars, earth] # solar system
     return planets, SolarSystem(planets)
 
 planets, system = solar_system()
@@ -99,10 +102,10 @@ while game:
     #     break
 
     for planet in planets:
-        planet.update_velocity(planets, FPS)
+        planet.update_velocity(planets, FPS, v_simulation)
 
     for planet in planets:
-        planet.update_position(FPS)
+        planet.update_position(FPS, v_simulation)
         planet.draw(screen)
 
     # system.predict(screen, 60)
@@ -117,151 +120,160 @@ while game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
-        if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pos()[0] < WIDTH:
-            planet = planet_w, planet_h = pygame.mouse.get_pos()
-            
-            rect_w, rect_h = 100, 20
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
+            if mouse_x < WIDTH:
+                planet = planet_w, planet_h = pygame.mouse.get_pos()
+                
+                rect_w, rect_h = 100, 20
 
-            mass = "1*10**23"
-            color = WHITE
+                mass = "1*10**23"
+                color = WHITE
 
-            done = False
-            esc = False
-            confirm = False
+                done = False
+                esc = False
+                confirm = False
 
-            while not confirm:
-                mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
+                while not confirm:
+                    mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                if not done:
-                    screen.fill(DARK_BLUE)
+                    if not done:
+                        screen.fill(DARK_BLUE)
 
-                    for star in stars:
-                        pygame.draw.circle(*star)
+                        for star in stars:
+                            pygame.draw.circle(*star)
 
-                    for i in range(len(planets)):
-                        planets[i].draw(screen)
+                        for i in range(len(planets)):
+                            planets[i].draw(screen)
 
-                    try:
-                        m = eval(mass) # instead of eval(), I could use the solve() function from my calculator
-                    except:
-                        pass
+                        try:
+                            m = eval(mass) # instead of eval(), I could use the solve() function from my calculator
+                        except:
+                            pass
 
-                    # if m < 10**24:
-                    #     radius = 1
-                    # elif m < 10**25:
-                    #     radius = 3
-                    # elif m < 10**27:
-                    #     radius = 5
-                    # elif m < 10**30:
-                    #     radius = 10
-                    # else:
-                    #     radius = math.log(m, 10)
+                        # if m < 10**24:
+                        #     radius = 1
+                        # elif m < 10**25:
+                        #     radius = 3
+                        # elif m < 10**27:
+                        #     radius = 5
+                        # elif m < 10**30:
+                        #     radius = 10
+                        # else:
+                        #     radius = math.log(m, 10)
 
-                    radius = 10
+                        radius = 10
 
-                    vel = [mouse_x-planet_w, mouse_y-planet_h]
+                        vel = [mouse_x-planet_w, mouse_y-planet_h]
 
-                    pygame.draw.line(screen, (255, 0, 0), planet, mouse, 3)
-                    dx = mouse_x-planet_w
-                    dy = planet_h-mouse_y
-                    if dx != 0 and dy != 0:
-                        x = planet_w + dx*0.95
-                        y = planet_h - dy*0.95
-                        x1 = x+dy*0.03
-                        y1 = y+dx*0.03
-                        x2 = x-dy*0.03
-                        y2 = y-dx*0.03
-                        pygame.draw.polygon(screen, (255, 0, 0), [mouse, (x1, y1), (x2, y2)])
-                    
-                    try:
-                        p = Planet([planet_w, planet_h], radius, vel, m, color)
-                    except:pass
-                    p.draw(screen)
-
-                    system.predict(screen, 60, p)
-
-                    pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, width_data_rect, HEIGHT))
-                    pygame.draw.line(screen, (255, 255, 255), (WIDTH, 0), (WIDTH, HEIGHT))
-
-                    for i in range(len(planets)):
-                        planets[i].write(i, screen, font, WIDTH)
-                    
-                    p.write(i+1, screen, font, WIDTH)
-
-                    if (planet_w < WIDTH - 5 - rect_w + radius) and (planet_h > rect_h + 5 + radius):
-                        rect = (planet_w - radius, planet_h - rect_h - radius - 5, rect_w, rect_h)
-                        mass_render = font.render(mass, True, (0, 0, 0))
-                        mass_rect = mass_render.get_rect(center = (planet_w - radius + rect_w/2, planet_h - rect_h - radius - 5 + rect_h/2))
-
-                    elif (planet_h > rect_h + 5 + radius): # too far right
-                        rect = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w), planet_h - rect_h - radius - 5, rect_w, rect_h)
-                        mass_render = font.render(mass, True, (0, 0, 0))
-                        mass_rect = mass_render.get_rect(center = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w) + rect_w/2, planet_h - rect_h - radius - 5 + rect_h/2))
-                    
-                    else: # top-right corner
-                        rect = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w), planet_h + radius + 5, rect_w, rect_h)
-                        mass_render = font.render(mass, True, (0, 0, 0))
-                        mass_rect = mass_render.get_rect(center = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w) + rect_w/2, planet_h + radius + 5 + rect_h/2))
-                    
-                    pygame.draw.rect(screen, (255, 255, 255), rect, border_radius = 5)
-                    screen.blit(mass_render, mass_rect)
-
-                else:
-                    point = (10, 10)
-                    width = 10
-                    if planet_w < 300 and planet_h < 300:
-                        point = (10, HEIGHT - 10 - 2 * width - 255)
-                    pygame.draw.rect(screen, (0, 0, 0), (*point, 255 + 2 * width, 255 + 2 * width), border_radius = 5)
-                    screen.blit(color_hue, (point[0] + width, point[1] + width, 255, 255))
-
-                    if (point[0] + width < mouse_x < point[0] + width + 255) and (point[1] + width < mouse_y < point[1] + width + 255):
-                        pixel_x = mouse_x - width - point[0]
-                        pixel_y = mouse_y - width - point[1]
-                        color = color_hue_pixels[pixel_y * 255 + pixel_x]
-                        pygame.draw.circle(screen, color, mouse, 10)
-                        pygame.draw.circle(screen, (0, 0, 0), mouse, 10, 1)
-
-                        p = Planet([planet_w, planet_h], radius, vel, eval(mass), color)
+                        pygame.draw.line(screen, (255, 0, 0), planet, mouse, 3)
+                        dx = mouse_x-planet_w
+                        dy = planet_h-mouse_y
+                        if dx != 0 and dy != 0:
+                            x = planet_w + dx*0.95
+                            y = planet_h - dy*0.95
+                            x1 = x+dy*0.03
+                            y1 = y+dx*0.03
+                            x2 = x-dy*0.03
+                            y2 = y-dx*0.03
+                            pygame.draw.polygon(screen, (255, 0, 0), [mouse, (x1, y1), (x2, y2)])
+                        
+                        try:
+                            p = Planet([planet_w, planet_h], radius, vel, m, color)
+                        except:pass
                         p.draw(screen)
 
+                        system.predict(screen, 60, p)
+
+                        pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, width_data_rect, HEIGHT))
+                        pygame.draw.line(screen, (255, 255, 255), (WIDTH, 0), (WIDTH, HEIGHT))
+
+                        for i in range(len(planets)):
+                            planets[i].write(i, screen, font, WIDTH)
+                        
+                        p.write(i+1, screen, font, WIDTH)
+
+                        if (planet_w < WIDTH - 5 - rect_w + radius) and (planet_h > rect_h + 5 + radius):
+                            rect = (planet_w - radius, planet_h - rect_h - radius - 5, rect_w, rect_h)
+                            mass_render = font.render(mass, True, (0, 0, 0))
+                            mass_rect = mass_render.get_rect(center = (planet_w - radius + rect_w/2, planet_h - rect_h - radius - 5 + rect_h/2))
+
+                        elif (planet_h > rect_h + 5 + radius): # too far right
+                            rect = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w), planet_h - rect_h - radius - 5, rect_w, rect_h)
+                            mass_render = font.render(mass, True, (0, 0, 0))
+                            mass_rect = mass_render.get_rect(center = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w) + rect_w/2, planet_h - rect_h - radius - 5 + rect_h/2))
+                        
+                        else: # top-right corner
+                            rect = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w), planet_h + radius + 5, rect_w, rect_h)
+                            mass_render = font.render(mass, True, (0, 0, 0))
+                            mass_rect = mass_render.get_rect(center = (min(planet_w - rect_w + radius, WIDTH - 5 - rect_w) + rect_w/2, planet_h + radius + 5 + rect_h/2))
+                        
                         pygame.draw.rect(screen, (255, 255, 255), rect, border_radius = 5)
                         screen.blit(mass_render, mass_rect)
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        if not done:
-                            if eval(mass) < 10**35:
-                                done = True
+                    else:
+                        point = (10, 10)
+                        width = 10
+                        if planet_w < 300 and planet_h < 300:
+                            point = (10, HEIGHT - 10 - 2 * width - 255)
+                        pygame.draw.rect(screen, (0, 0, 0), (*point, 255 + 2 * width, 255 + 2 * width), border_radius = 5)
+                        screen.blit(color_hue, (point[0] + width, point[1] + width, 255, 255))
+
+                        if (point[0] + width < mouse_x < point[0] + width + 255) and (point[1] + width < mouse_y < point[1] + width + 255):
+                            pixel_x = mouse_x - width - point[0]
+                            pixel_y = mouse_y - width - point[1]
+                            color = color_hue_pixels[pixel_y * 255 + pixel_x]
+                            pygame.draw.circle(screen, color, mouse, 10)
+                            pygame.draw.circle(screen, (0, 0, 0), mouse, 10, 1)
+
+                            p = Planet([planet_w, planet_h], radius, vel, eval(mass), color)
+                            p.draw(screen)
+
+                            pygame.draw.rect(screen, (255, 255, 255), rect, border_radius = 5)
+                            screen.blit(mass_render, mass_rect)
+
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                        elif event.type == pygame.MOUSEBUTTONDOWN:
+                            if not done:
+                                if eval(mass) < 10**35:
+                                    done = True
+                                else:
+                                    mass = "1*10**23"
                             else:
-                                mass = "1*10**23"
-                        else:
-                            confirm = True
+                                confirm = True
 
-                    elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            confirm = True
-                            esc = True
-                        elif event.key == pygame.K_BACKSPACE:
-                            mass = mass[:-1]
-                        elif event.key in number_keys:
-                            mass += pygame.key.name(event.key)
-                        elif event.key == pygame.K_DOLLAR and (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT) and mass[-2:] != "**" and len(mass) > 0:
-                            mass += "*"
-                        elif event.key == pygame.K_SEMICOLON and (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT):
-                            mass += "."
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_ESCAPE:
+                                confirm = True
+                                esc = True
+                            elif event.key == pygame.K_BACKSPACE:
+                                mass = mass[:-1]
+                            elif event.key in number_keys:
+                                mass += pygame.key.name(event.key)
+                            elif event.key == pygame.K_DOLLAR and (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT) and mass[-2:] != "**" and len(mass) > 0:
+                                mass += "*"
+                            elif event.key == pygame.K_SEMICOLON and (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT):
+                                mass += "."
 
-                pygame.display.update()
+                    pygame.display.update()
 
-            if not esc:
-                planets.append(Planet(list(planet), radius, vel, m, color)) 
-                system.planets = planets
+                if not esc:
+                    planets.append(Planet(list(planet), radius, vel, m, color)) 
+                    system.planets = planets
+            else:
+                v_simulation = (mouse_x - WIDTH) * max_v_simulation / width_data_rect
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                
                 planets, system = solar_system()
+            elif event.key == pygame.K_SPACE:
+                if v_simulation > 0:
+                    old_v_simulation = v_simulation
+                    v_simulation = 0
+                else:
+                    v_simulation = old_v_simulation
 
     pygame.display.update()
 

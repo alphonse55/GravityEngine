@@ -27,8 +27,7 @@ class SolarSystem:
                 p[0] = p[0] + v[0]/FPS
                 p[1] = p[1] + v[1]/FPS
 
-                # pygame.draw.line(screen, planet.color, planet.future_pos, p)
-                pygame.draw.circle(screen, planet.color, p, 1)
-
                 planet.future_pos = p
                 planet.future_v = v
+
+                pygame.draw.circle(screen, planet.color, p, 1)
