@@ -1,6 +1,8 @@
 import math
 import pygame
 
+
+
 class Planet:
     def __init__(self, pos, r, v, m, color, name = "Planet"):
         self.name = name
@@ -9,13 +11,22 @@ class Planet:
         self.v = v
         self.m = m
         self.color = color
+        self.future_pos = 0
+        self.future_v = 0
 
-    def update(self, planets, FPS):
+    def planet_acceleration(self, planets, time="present"):
         a = [0, 0]
         for p in planets:
             if p != self:
-                dx = (self.pos[0] - p.pos[0])*1000*1000
-                dy = (self.pos[1] - p.pos[1])*1000*1000
+                if time == "present":
+                    pos1 = self.pos
+                    pos2 = p.pos
+                elif time == "future":
+                    pos1 = self.future_pos
+                    pos2 = p.future_pos
+
+                dx = (pos1[0] - pos2[0])*1000000
+                dy = (pos1[1] - pos2[1])*1000000
 
                 if dx != 0 or dy != 0:
                     acc = 6.67408*10**-11 * p.m/(dx**2 + dy**2)
@@ -23,21 +34,27 @@ class Planet:
                     alfa = math.atan(abs(dy/dx))
                 else:
                     alfa = math.pi/2
-
-                if p.pos[0] > self.pos[0]:
+                    
+                if pos2[0] > pos1[0]:
                     a[0] += acc*math.cos(alfa)
                 else:
                     a[0] -= acc*math.cos(alfa)
-                if p.pos[1] > self.pos[1]:
+
+                if pos2[1] > pos1[1]:
                     a[1] += acc*math.sin(alfa)
                 else:
                     a[1] -= acc*math.sin(alfa)
+        return a
 
-        self.v[0] += a[0]/1000/1000*10
-        self.v[1] += a[1]/1000/1000*10
+    def update_velocity(self, planets, FPS):
+        a = self.planet_acceleration(planets)
 
-        self.pos[0] += self.v[0]/FPS
-        self.pos[1] += self.v[1]/FPS
+        self.v[0] += a[0]/1000/FPS*50
+        self.v[1] += a[1]/1000/FPS*50
+
+    def update_position(self, FPS):
+        self.pos[0] += self.v[0]/FPS*50
+        self.pos[1] += self.v[1]/FPS*50
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.pos, self.r)
