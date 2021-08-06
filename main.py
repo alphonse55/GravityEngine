@@ -19,11 +19,14 @@ pygame.display.set_caption("Gravity Engine")
 center_w = WIDTH/2
 center_h = HEIGHT/2
 
+rect_w, rect_h = 100, 20
+
 SKY_BLUE = (0, 0, 50)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
 
 FPS = 100
 clock = pygame.time.Clock()
@@ -40,7 +43,7 @@ stars = [(screen, tuple([random.randint(150, 250)]*3), (random.randint(0, WIDTH)
 v_simulation = 10
 max_v_simulation = 20
 
-slider = Slider(2/3 * width_data_rect, 10, (WIDTH + width_data_rect/6, HEIGHT - 75), RED, WHITE, BLACK, 1, max_v_simulation, v_simulation)
+slider = Slider(2/3 * width_data_rect, 10, (WIDTH + width_data_rect/6, HEIGHT - 75), (GREEN, RED), WHITE, BLACK, 1, max_v_simulation, v_simulation, full = False)
 
 def solar_system():
     # distance : in millions of km
@@ -130,21 +133,20 @@ while game:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
             if mouse_x < WIDTH:
-                planet_pos = planet_w, planet_h = pygame.mouse.get_pos()
+                # new planet generation
+                planet_pos = planet_w, planet_h = mouse
                 
-                rect_w, rect_h = 100, 20
-
                 mass = "1*10**23"
                 color = WHITE
 
-                done = False
-                esc = False
-                confirm = False
+                speed_and_mass = False
+                escape = False
+                all_done = False
 
-                while not confirm:
+                while not all_done:
                     mouse = mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                    if not done:
+                    if not speed_and_mass:
                         screen.fill(SKY_BLUE)
 
                         for star in stars:
@@ -154,8 +156,9 @@ while game:
                             planet.draw(screen)
 
                         try:
-                            m = eval(mass) # instead of eval(), I could use the solve() function from my calculator
-                        except:
+                            m = eval(mass)
+                        except SyntaxError:
+                            # if the mass string cannot be evaluated (for example if it ends in "*"), m just stays as it is so we don't do anyhting
                             pass
 
                         # if m < 10**24:
@@ -185,9 +188,7 @@ while game:
                             y2 = y-dx*0.03
                             pygame.draw.polygon(screen, RED, [mouse, (x1, y1), (x2, y2)])
                         
-                        try:
-                            p = Planet([planet_w, planet_h], radius, vel, m, color)
-                        except:pass
+                        p = Planet([planet_w, planet_h], radius, vel, m, color)
                         p.draw(screen)
 
                         system.predict(screen, FPS, 60, p)
@@ -243,18 +244,18 @@ while game:
                         if event.type == pygame.QUIT:
                             pygame.quit()
                         elif event.type == pygame.MOUSEBUTTONDOWN:
-                            if not done:
+                            if not speed_and_mass:
                                 if eval(mass) < 10**35:
-                                    done = True
+                                    speed_and_mass = True
                                 else:
                                     mass = "1*10**23"
                             else:
-                                confirm = True
+                                all_done = True
 
                         elif event.type == pygame.KEYDOWN:
                             if event.key == pygame.K_ESCAPE:
-                                confirm = True
-                                esc = True
+                                all_done = True
+                                escape = True
                             elif event.key == pygame.K_BACKSPACE:
                                 mass = mass[:-1]
                             elif event.key in number_keys:
@@ -268,7 +269,7 @@ while game:
 
                     pygame.display.update()
 
-                if not esc:
+                if not escape:
                     planets.append(Planet(list(planet_pos), radius, vel, m, color)) 
                     system.planets = planets
 
