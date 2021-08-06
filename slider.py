@@ -10,7 +10,9 @@ class Slider:
         self.color_circle = color_circle
         self.background = background
         self.min_value = min_value
+        self.min_value_render = font.render(str(min_value), True, color_circle)
         self.max_value = max_value
+        self.max_value_render = font.render(str(max_value), True, color_circle)
         self.value = value
 
         self.full = full
@@ -35,6 +37,21 @@ class Slider:
             pygame.draw.rect(screen, color, (self.topleft[0], self.topleft[1], width, self.height), border_radius = int(self.height/2)) # line with two colors
         
         pygame.draw.circle(screen, self.color_circle, (self.topleft[0] + (self.value - self.min_value)/(self.max_value - self.min_value)*self.width, self.topleft[1] + self.height/2), self.height) # circle
+
+        # draw small lines
+        pygame.draw.line(screen, self.color_circle, (self.topleft[0], self.topleft[1] + self.height * 2), (self.topleft[0], self.topleft[1] + self.height * 3))
+        pygame.draw.line(screen, self.color_circle, (self.topleft[0] + self.width, self.topleft[1] + self.height * 2), (self.topleft[0] + self.width, self.topleft[1] + self.height * 3))
+
+        min_value_rect = self.min_value_render.get_rect(midtop = (self.topleft[0], self.topleft[1] + self.height * 4))
+        max_value_rect = self.max_value_render.get_rect(midtop = (self.topleft[0] + self.width, self.topleft[1] + self.height * 4))
+        
+        # cover old numbers
+        pygame.draw.rect(screen, self.background, min_value_rect)
+        pygame.draw.rect(screen, self.background, max_value_rect)
+
+        # draw numbers
+        screen.blit(self.min_value_render, min_value_rect)
+        screen.blit(self.max_value_render, max_value_rect)
 
     def mouse_on_circle(self, mouse):
         return abs(self.topleft[0] + (self.value - self.min_value)/(self.max_value - self.min_value)*self.width - mouse[0]) < 2*self.height and abs(self.topleft[1] + self.height/2 - mouse[1]) < 2 * self.height
