@@ -5,8 +5,7 @@ class SolarSystem:
     def __init__(self, planets):
         self.planets = planets
     
-    def predict(self, screen, t, p=None):
-        FPS = 50
+    def predict(self, screen, FPS, t, p=None):
         planets = deepcopy(self.planets)
         if p != None:
             planets.append(p)
