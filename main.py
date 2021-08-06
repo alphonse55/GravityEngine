@@ -30,6 +30,7 @@ GREEN = (0, 255, 0)
 
 FPS = 100
 clock = pygame.time.Clock()
+
 font20 = pygame.font.Font(None, 20)
 font25 = pygame.font.Font(None, 25)
 
@@ -68,6 +69,7 @@ def solar_system():
 
     # planets = [p1, p2, p3] # 8 figure
     planets = [sun, mercury, venus, mars, earth] # solar system
+
     return planets, SolarSystem(planets)
 
 planets, system = solar_system()
@@ -79,6 +81,8 @@ while game:
 
     for star in stars:
         pygame.draw.circle(*star)
+
+    # COLLISIONS - MERGING OF PLANETS
 
     # for planet in planets:
     #     for p in planets:
@@ -107,9 +111,6 @@ while game:
     #                 planets.remove(p)
     #                 planets.remove(planet)
     #                 break
-    #     else:
-    #         continue
-    #     break
 
     for planet in planets:
         planet.update_velocity(planets, FPS, v_simulation)
@@ -137,7 +138,7 @@ while game:
                 # new planet generation
                 planet_pos = planet_w, planet_h = mouse
                 
-                mass = "1*10**23"
+                mass = "1*10**24"
                 color = WHITE
 
                 speed_and_mass = False
@@ -159,35 +160,18 @@ while game:
                         try:
                             m = eval(mass)
                         except SyntaxError:
-                            # if the mass string cannot be evaluated (for example if it ends in "*"), m just stays as it is so we don't do anyhting
+                            # if the mass string cannot be evaluated (for example if it ends in "*"),
+                            # m just stays as it is so we don't do anyhting
                             pass
 
-                        # if m < 10**24:
-                        #     radius = 1
-                        # elif m < 10**25:
-                        #     radius = 3
-                        # elif m < 10**27:
-                        #     radius = 5
-                        # elif m < 10**30:
-                        #     radius = 10
-                        # else:
-                        #     radius = math.log(m, 10)
-
-                        radius = 10
+                        if m < 10**30:
+                            radius = max(1, math.log(m, 10) - 18)
+                        else:
+                            radius = math.log(m, 10)
 
                         vel = [(mouse_x-planet_w)/10, (mouse_y-planet_h)/10]
 
                         pygame.draw.line(screen, RED, planet_pos, mouse, 3)
-                        dx = mouse_x - planet_w
-                        dy = planet_h - mouse_y
-                        if dx != 0 and dy != 0:
-                            x = planet_w + dx*0.95
-                            y = planet_h - dy*0.95
-                            x1 = x+dy*0.03
-                            y1 = y+dx*0.03
-                            x2 = x-dy*0.03
-                            y2 = y-dx*0.03
-                            pygame.draw.polygon(screen, RED, [mouse, (x1, y1), (x2, y2)])
                         
                         p = Planet([planet_w, planet_h], radius, vel, m, color)
                         p.draw(screen)
@@ -256,7 +240,7 @@ while game:
                                 if eval(mass) < 10**35:
                                     speed_and_mass = True
                                 else:
-                                    mass = "1*10**23"
+                                    mass = "1*10**24"
                             else:
                                 all_done = True
 

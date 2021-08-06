@@ -34,7 +34,7 @@ class Slider:
             color = tuple([self.color_line[0][n] + ((self.color_line[1][n] - self.color_line[0][n]) * (self.value-self.min_value)/(self.max_value-self.min_value)) for n in range(3)])
             pygame.draw.rect(screen, color, (self.topleft[0], self.topleft[1], width, self.height), border_radius = int(self.height/2)) # line with two colors
         
-        pygame.draw.circle(screen, self.color_circle, (self.topleft[0] + (self.value - self.min_value)/(self.max_value - self.min_value)*self.width, self.topleft[1] + self.height/2), self.height) # cicle
+        pygame.draw.circle(screen, self.color_circle, (self.topleft[0] + (self.value - self.min_value)/(self.max_value - self.min_value)*self.width, self.topleft[1] + self.height/2), self.height) # circle
 
     def mouse_on_circle(self, mouse):
         return abs(self.topleft[0] + (self.value - self.min_value)/(self.max_value - self.min_value)*self.width - mouse[0]) < 2*self.height and abs(self.topleft[1] + self.height/2 - mouse[1]) < 2 * self.height
