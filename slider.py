@@ -1,7 +1,8 @@
 import pygame
 
 class Slider:
-    def __init__(self, width, height, topleft, color_line, color_circle, background, min_value, max_value, value, full = True):
+    def __init__(self, name, font, width, height, topleft, color_line, color_circle, background, min_value, max_value, value, full = True):
+        self.name_render = font.render(name, True, color_circle)        
         self.width = width
         self.height = height
         self.topleft = topleft
@@ -17,6 +18,10 @@ class Slider:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.background, (self.topleft[0] - self.height, self.topleft[1] - self.height/2, self.width + 2*self.height, 2*self.height)) # cover the old slider
+        name_rect = self.name_render.get_rect(bottomleft = (self.topleft[0], self.topleft[1] - 20))
+        pygame.draw.rect(screen, self.background, name_rect) # cover the old text
+
+        screen.blit(self.name_render, name_rect) # write new text
 
         width = self.width
         if not self.full: # go only up to the circle
