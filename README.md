@@ -14,10 +14,6 @@ You can then choose it's velocity by clicking again on the window. The velocity 
 
 The last step will be to choose the color : an image will appear in the corner and the color you click on will be selected.
 
-<br/>
-
-When two objects merge, the mass will be added, the diameter augmeted (considering the objects as spehere) and the average mean of the color will be set as the new color.
-
 # How it works
 
 Every frame, for each object, the gravitational acceleration due to all other objects is calculated with Newton's gravitational law and the object's velocity is updated. The object then moves according to its velocity in the x and y direction.
