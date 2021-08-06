@@ -22,6 +22,7 @@ center_h = HEIGHT/2
 rect_w, rect_h = 150, 20
 
 SKY_BLUE = (0, 0, 50)
+DATA_GREY = (50, 50, 50)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -31,8 +32,7 @@ GREEN = (0, 255, 0)
 FPS = 100
 clock = pygame.time.Clock()
 
-font20 = pygame.font.Font(None, 20)
-font25 = pygame.font.Font(None, 25)
+font = pygame.font.Font("Roboto.ttf", 15)
 
 number_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
 
@@ -45,7 +45,7 @@ stars = [(screen, tuple([random.randint(150, 250)]*3), (random.randint(0, WIDTH)
 v_simulation = 10
 max_v_simulation = 20
 
-slider = Slider("Simulation speed :", font25,  2/3 * width_data_rect, 10, (WIDTH + width_data_rect/6, HEIGHT - 75), (GREEN, RED), WHITE, BLACK, 1, max_v_simulation, v_simulation, full = False)
+slider = Slider("Simulation speed :", font,  2/3 * width_data_rect, 10, (WIDTH + width_data_rect/6, HEIGHT - 75), (GREEN, RED), WHITE, DATA_GREY, 1, max_v_simulation, v_simulation, full = False)
 
 def solar_system():
     # distance : in millions of km
@@ -119,11 +119,11 @@ while game:
         planet.update_position(FPS, v_simulation)
         planet.draw(screen)
 
-    pygame.draw.rect(screen, BLACK, (WIDTH, 0, width_data_rect, HEIGHT))
+    pygame.draw.rect(screen, DATA_GREY, (WIDTH, 0, width_data_rect, HEIGHT))
     pygame.draw.line(screen, WHITE, (WIDTH, 0), (WIDTH, HEIGHT))
 
     for i in range(len(planets)):
-        planets[i].write(i, screen, font20, WIDTH)
+        planets[i].write(i, screen, font, WIDTH)
     
     slider.set_value(v_simulation)
     slider.draw(screen)
@@ -178,13 +178,13 @@ while game:
 
                         system.predict(screen, FPS, 60, p)
 
-                        pygame.draw.rect(screen, BLACK, (WIDTH, 0, width_data_rect, HEIGHT))
+                        pygame.draw.rect(screen, DATA_GREY, (WIDTH, 0, width_data_rect, HEIGHT))
                         pygame.draw.line(screen, WHITE, (WIDTH, 0), (WIDTH, HEIGHT))
 
                         for i in range(len(planets)):
-                            planets[i].write(i, screen, font20, WIDTH)
+                            planets[i].write(i, screen, font, WIDTH)
                         
-                        p.write(i+1, screen, font20, WIDTH)
+                        p.write(i+1, screen, font, WIDTH)
 
                         rect_x = planet_w - radius
                         rect_y = planet_h - rect_h - radius - 5
@@ -196,9 +196,9 @@ while game:
                             rect_y = planet_h + radius + 5
                         
                         rect = (rect_x, rect_y, rect_w, rect_h)
-                        mass_render = font20.render("Mass :", True, BLACK)
-                        m_render = font20.render(mass, True, BLACK)
-                        kg_render = font20.render("kg", True, BLACK)
+                        mass_render = font.render("Mass :", True, BLACK)
+                        m_render = font.render(mass, True, BLACK)
+                        kg_render = font.render("kg", True, BLACK)
 
                         mass_rect = mass_render.get_rect(midleft = (rect_x + 10, rect_y + rect_h/2))
                         m_rect = m_render.get_rect(center = (rect_x + rect_w * 3/5, rect_y + rect_h/2))
