@@ -49,7 +49,7 @@ slider = Slider("Simulation speed :", font25,  2/3 * width_data_rect, 10, (WIDTH
 
 def solar_system():
     # distance : in millions of km
-    # radius : in thousands of km, all get divided by 2 and the sun by 10 on top for size on screen, then divided by 1000 to make it fit
+    # radius : in thousands of km, all get divided by 2 and the sun by 10 on top for size on screen
     # velocity : in km/s
     # mass : in kg
     sun = Planet([center_w, center_h], 696.340/20, [0, 0], 1.989*10**30, (255, 255, 0), "Sun")
